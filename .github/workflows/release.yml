@@ -32,8 +32,7 @@ jobs:
       - name: Build backend (linux/amd64)
         working-directory: backend
         run: |
-          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 \
-            go build -ldflags="-s -w" -o ../backend-linux .
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0             go build -ldflags="-s -w" -o ../backend-linux .
 
       - name: Update manifest version
         run: |
@@ -43,20 +42,18 @@ jobs:
 
       - name: Package ZIP
         run: |
-          python3 - <<'EOF'
+          python3 -c "
           import zipfile, os
-
           files = [
-              ('manifest.json',        'manifest.json'),
+              ('manifest.json',           'manifest.json'),
               ('frontend/dist/widget.js', 'widget.js'),
-              ('migrations.sql',       'migrations.sql'),
-              ('backend-linux',        'backend'),
+              ('migrations.sql',          'migrations.sql'),
+              ('backend-linux',           'backend'),
           ]
-
           with zipfile.ZipFile('domovoy-control.zip', 'w', zipfile.ZIP_DEFLATED) as z:
               for src, arc in files:
                   if not os.path.exists(src):
-                      print(f'  skip {src} (not found)')
+                      print(f'  skip {src}')
                       continue
                   info = zipfile.ZipInfo(arc)
                   if arc == 'backend':
@@ -64,10 +61,8 @@ jobs:
                   with open(src, 'rb') as f:
                       z.writestr(info, f.read())
                   print(f'  + {arc}')
-
-          size = round(os.path.getsize('domovoy-control.zip') / 1024)
-          print(f'ZIP ready: {size} KB')
-          EOF
+          print(f'ZIP ready: {round(os.path.getsize(\"domovoy-control.zip\") / 1024)} KB')
+          "
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -75,15 +70,9 @@ jobs:
           files: domovoy-control.zip
           generate_release_notes: true
 
-      - name: Notify domovoy-modules registry
+      - name: Notify focus-modules registry
         env:
-          # Add REGISTRY_TOKEN secret in repo settings:
-          # GitHub PAT with repo scope for awbait/domovoy-modules
           REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          curl -s -X POST \
-            -H "Authorization: Bearer $REGISTRY_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/awbait/domovoy-modules/dispatches \
-            -d "{\"event_type\":\"module-released\",\"client_payload\":{\"id\":\"domovoy-control\",\"version\":\"$VERSION\"}}"
+          curl -s -X POST             -H "Authorization: Bearer $REGISTRY_TOKEN"             -H "Accept: application/vnd.github+json"             https://api.github.com/repos/awbait/focus-modules/dispatches             -d "{\"event_type\":\"module-released\",\"client_payload\":{\"id\":\"domovoy-control\",\"version\":\"$VERSION\"}}"
