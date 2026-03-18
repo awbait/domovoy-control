@@ -70,9 +70,29 @@ jobs:
           files: domovoy-control.zip
           generate_release_notes: true
 
-      - name: Notify focus-modules registry
+      - name: Update focus-modules registry
         env:
           REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          curl -s -X POST             -H "Authorization: Bearer $REGISTRY_TOKEN"             -H "Accept: application/vnd.github+json"             https://api.github.com/repos/awbait/focus-modules/dispatches             -d "{\"event_type\":\"module-released\",\"client_payload\":{\"id\":\"domovoy-control\",\"version\":\"$VERSION\"}}"
+
+          # Get current file SHA and content
+          RESPONSE=$(curl -s \
+            -H "Authorization: Bearer $REGISTRY_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/awbait/focus-modules/contents/community-modules.json)
+
+          SHA=$(echo "$RESPONSE" | jq -r '.sha')
+          CONTENT=$(echo "$RESPONSE" | jq -r '.content' | base64 -d)
+
+          # Update version for this module
+          UPDATED=$(echo "$CONTENT" | jq --arg id "domovoy-control" --arg v "$VERSION" \
+            'map(if .id == $id then .version = $v else . end)')
+
+          # Push updated file
+          ENCODED=$(echo "$UPDATED" | base64 -w 0)
+          curl -s -X PUT \
+            -H "Authorization: Bearer $REGISTRY_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/awbait/focus-modules/contents/community-modules.json \
+            -d "{\"message\":\"chore: update domovoy-control to v$VERSION\",\"content\":\"$ENCODED\",\"sha\":\"$SHA\"}"
