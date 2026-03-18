@@ -32,10 +32,10 @@ const css: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    background: 'linear-gradient(135deg,#1a1a2e 0%,#16213e 100%)',
+    background: 'linear-gradient(135deg,#0d2b1f 0%,#0a1f2e 100%)',
     borderRadius: 16,
-    border: '1px solid rgba(120,120,200,0.2)',
-    color: '#c0c0e0',
+    border: '1px solid rgba(52,211,153,0.2)',
+    color: '#a7f3d0',
     fontFamily: 'system-ui,sans-serif',
     boxSizing: 'border-box',
     padding: 16,
@@ -48,32 +48,32 @@ const css: Record<string, React.CSSProperties> = {
     width: 8,
     height: 8,
     borderRadius: '50%',
-    background: '#7878dc',
-    boxShadow: '0 0 0 0 rgba(120,120,220,0.6)',
+    background: '#34d399',
+    boxShadow: '0 0 0 0 rgba(52,211,153,0.6)',
     animation: 'domovoy-pulse 1.2s ease-in-out infinite',
   },
   btn: {
     marginTop: 4,
     padding: '6px 18px',
-    background: 'rgba(120,120,220,0.15)',
-    border: '1px solid rgba(120,120,220,0.3)',
+    background: 'rgba(52,211,153,0.12)',
+    border: '1px solid rgba(52,211,153,0.3)',
     borderRadius: 20,
-    color: '#a0a0e8',
+    color: '#6ee7b7',
     fontSize: 11,
     cursor: 'pointer',
     transition: 'background 0.2s',
   },
   btnActive: {
-    background: 'rgba(120,120,220,0.35)',
-    color: '#d0d0ff',
+    background: 'rgba(52,211,153,0.3)',
+    color: '#a7f3d0',
   },
 }
 
 // ── inject keyframes once ────────────────────────────────────────
 const STYLE = `@keyframes domovoy-pulse {
-  0%   { box-shadow: 0 0 0 0   rgba(120,120,220,0.6); }
-  70%  { box-shadow: 0 0 0 8px rgba(120,120,220,0);   }
-  100% { box-shadow: 0 0 0 0   rgba(120,120,220,0);   }
+  0%   { box-shadow: 0 0 0 0   rgba(52,211,153,0.6); }
+  70%  { box-shadow: 0 0 0 8px rgba(52,211,153,0);   }
+  100% { box-shadow: 0 0 0 0   rgba(52,211,153,0);   }
 }`
 if (typeof document !== 'undefined' && !document.getElementById('domovoy-style')) {
   const s = document.createElement('style')
