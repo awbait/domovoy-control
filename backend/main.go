@@ -4,6 +4,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -13,6 +14,8 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	_ "modernc.org/sqlite"
 )
 
 type Status struct {
@@ -21,9 +24,15 @@ type Status struct {
 	Since   string `json:"since,omitempty"`
 }
 
+type Settings struct {
+	Host string `json:"host"`
+	Port string `json:"port"`
+}
+
 var (
 	mu    sync.RWMutex
 	state = Status{Running: true, State: "idle"}
+	db    *sql.DB
 )
 
 func main() {
@@ -37,11 +46,21 @@ func main() {
 		os.Exit(1)
 	}
 
+	if dbPath := os.Getenv("DB_PATH"); dbPath != "" {
+		db, err = sql.Open("sqlite", dbPath)
+		if err != nil {
+			slog.Warn("domovoy-control: open db", "err", err)
+			db = nil
+		}
+	}
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", handleHealth)
 	mux.HandleFunc("GET /manifest", handleManifest)
 	mux.HandleFunc("GET /status", handleStatus)
 	mux.HandleFunc("POST /command", handleCommand)
+	mux.HandleFunc("GET /settings", handleGetSettings)
+	mux.HandleFunc("PUT /settings", handlePutSettings)
 
 	// Bind the port before writing handshake so the host can connect immediately.
 	ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
@@ -119,4 +138,66 @@ func handleCommand(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "accepted"}) //nolint:errcheck
+}
+
+func handleGetSettings(w http.ResponseWriter, _ *http.Request) {
+	s := readSettings()
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(s) //nolint:errcheck
+}
+
+func handlePutSettings(w http.ResponseWriter, r *http.Request) {
+	var s Settings
+	if err := json.NewDecoder(r.Body).Decode(&s); err != nil {
+		http.Error(w, "invalid body", http.StatusBadRequest)
+		return
+	}
+	if err := writeSettings(s); err != nil {
+		http.Error(w, "save failed: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(s) //nolint:errcheck
+}
+
+func readSettings() Settings {
+	defaults := Settings{Host: "127.0.0.1", Port: "50055"}
+	if db == nil {
+		return defaults
+	}
+	rows, err := db.Query(`SELECT key, value FROM domovoy_control_settings`)
+	if err != nil {
+		return defaults
+	}
+	defer rows.Close()
+	s := defaults
+	for rows.Next() {
+		var k, v string
+		if rows.Scan(&k, &v) != nil {
+			continue
+		}
+		switch k {
+		case "host":
+			s.Host = v
+		case "port":
+			s.Port = v
+		}
+	}
+	return s
+}
+
+func writeSettings(s Settings) error {
+	if db == nil {
+		return fmt.Errorf("db not available")
+	}
+	_, err := db.Exec(`
+		INSERT INTO domovoy_control_settings (key, value) VALUES ('host', ?)
+		ON CONFLICT(key) DO UPDATE SET value = excluded.value`, s.Host)
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec(`
+		INSERT INTO domovoy_control_settings (key, value) VALUES ('port', ?)
+		ON CONFLICT(key) DO UPDATE SET value = excluded.value`, s.Port)
+	return err
 }
