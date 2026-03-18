@@ -46,7 +46,7 @@ jobs:
           import zipfile, os
           files = [
               ('manifest.json',           'manifest.json'),
-              ('frontend/dist/widget.js', 'widget.js'),
+              ('dist/widget.js',          'widget.js'),
               ('migrations.sql',          'migrations.sql'),
               ('backend-linux',           'backend'),
           ]
