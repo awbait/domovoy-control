@@ -1,28 +1,4 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-
-// Builds a self-contained ES module that defines the <domovoy-control-widget>
-// custom element. React is bundled inline — no external dependencies needed.
-export default defineConfig({
-  plugins: [react()],
-  // Replace Node.js globals that React references but browsers don't have
-  define: {
-    'process.env.NODE_ENV': JSON.stringify('production'),
-  },
-  build: {
-    lib: {
-      entry: {
-        widget: 'src/widget.tsx',
-        settings: 'src/settings.tsx',
-      },
-      formats: ['es'],
-      fileName: (_, name) => `${name}.js`,
-    },
-    outDir: '../dist',
-    emptyOutDir: true,
-    // Bundle everything — widget.js must be self-contained
-    rollupOptions: {
-      external: [],
-    },
-  },
-})
+// Build configs split into vite.widget.config.ts and vite.settings.config.ts
+// to ensure each output is fully self-contained (no shared chunks).
+// See package.json "build" script.
+export default {}

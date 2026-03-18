@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build --config vite.widget.config.ts && vite build --config vite.settings.config.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
