@@ -47,6 +47,7 @@ jobs:
           files = [
               ('manifest.json',           'manifest.json'),
               ('dist/widget.js',          'widget.js'),
+              ('dist/settings.js',        'settings.js'),
               ('migrations.sql',          'migrations.sql'),
               ('backend-linux',           'backend'),
           ]

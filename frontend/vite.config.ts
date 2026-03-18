@@ -11,9 +11,12 @@ export default defineConfig({
   },
   build: {
     lib: {
-      entry: 'src/widget.tsx',
+      entry: {
+        widget: 'src/widget.tsx',
+        settings: 'src/settings.tsx',
+      },
       formats: ['es'],
-      fileName: () => 'widget.js',
+      fileName: (_, name) => `${name}.js`,
     },
     outDir: '../dist',
     emptyOutDir: true,
