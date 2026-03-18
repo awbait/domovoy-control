@@ -44,6 +44,14 @@ const css: Record<string, React.CSSProperties> = {
   icon: { fontSize: '2.2rem', lineHeight: 1 },
   name: { fontWeight: 600, fontSize: 14 },
   status: { fontSize: 11, opacity: 0.55, textAlign: 'center' },
+  pulse: {
+    width: 8,
+    height: 8,
+    borderRadius: '50%',
+    background: '#7878dc',
+    boxShadow: '0 0 0 0 rgba(120,120,220,0.6)',
+    animation: 'domovoy-pulse 1.2s ease-in-out infinite',
+  },
   btn: {
     marginTop: 4,
     padding: '6px 18px',
@@ -59,6 +67,19 @@ const css: Record<string, React.CSSProperties> = {
     background: 'rgba(120,120,220,0.35)',
     color: '#d0d0ff',
   },
+}
+
+// ── inject keyframes once ────────────────────────────────────────
+const STYLE = `@keyframes domovoy-pulse {
+  0%   { box-shadow: 0 0 0 0   rgba(120,120,220,0.6); }
+  70%  { box-shadow: 0 0 0 8px rgba(120,120,220,0);   }
+  100% { box-shadow: 0 0 0 0   rgba(120,120,220,0);   }
+}`
+if (typeof document !== 'undefined' && !document.getElementById('domovoy-style')) {
+  const s = document.createElement('style')
+  s.id = 'domovoy-style'
+  s.textContent = STYLE
+  document.head.appendChild(s)
 }
 
 // ── React component ──────────────────────────────────────────────
@@ -106,7 +127,10 @@ function DomovoyWidget() {
     <div style={css.root}>
       <div style={css.icon}>🏠</div>
       <div style={css.name}>Домовой</div>
-      <div style={css.status}>{stateLabel}</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        {isListening && <div style={css.pulse} />}
+        <div style={css.status}>{stateLabel}</div>
+      </div>
       <button
         style={{ ...css.btn, ...(isListening || busy ? css.btnActive : {}) }}
         onClick={sendCommand}
